@@ -45,13 +45,40 @@ def scale(buckets, lo, hi, target):
     f=target/s
     for b in sel: b["avg"]*=f
     return f
-f_b50=scale(L0,0,50,G["b50"]); f_5090=scale(L0,50,90,G["p50_90"]); f_9099=scale(L0,90,99,G["p90_99"])
+# Smooth scale factor: piecewise-linear in percentile with knots at the group centres, solved so each
+# Fed group total matches exactly (no step at the 50th or 90th percentile boundary).
+KN=[25.0,70.0,94.5]
+def basis(p):
+    """weights of (f1,f2,f3) at percentile centre p"""
+    if p<=KN[0]: return (1,0,0)
+    if p>=KN[2]: return (0,0,1)
+    if p<=KN[1]: t=(p-KN[0])/(KN[1]-KN[0]); return (1-t,t,0)
+    t=(p-KN[1])/(KN[2]-KN[1]); return (0,1-t,t)
+groups=[(0,50,G["b50"]),(50,90,G["p50_90"]),(90,99,G["p90_99"])]
+A=[[0.0]*3 for _ in range(3)]; B=[0.0]*3
+for gi,(lo,hi,tot) in enumerate(groups):
+    for b in L0[lo:hi]:
+        w=basis(b["lo"]+0.5); raw=b["avg"]*0.01*HH
+        for k in range(3): A[gi][k]+=raw*w[k]
+    B[gi]=tot
+# solve 3x3 by Gaussian elimination
+M=[A[i]+[B[i]] for i in range(3)]
+for c in range(3):
+    piv=max(range(c,3),key=lambda r:abs(M[r][c])); M[c],M[piv]=M[piv],M[c]
+    for r in range(3):
+        if r!=c:
+            f=M[r][c]/M[c][c]; M[r]=[x-f*y for x,y in zip(M[r],M[c])]
+F=[M[i][3]/M[i][i] for i in range(3)]
+for b in L0[:99]:
+    w=basis(b["lo"]+0.5); b["avg"]*=sum(F[k]*w[k] for k in range(3))
 L0[99]["avg"]=(G["p99_999"]+G["top01"])/(0.01*HH)
-print("scale factors", round(f_b50,3), round(f_5090,3), round(f_9099,3))
+f_b50,f_5090,f_9099=F
+print("scale factors at knots", [round(x,3) for x in F])
+for lo,hi,tot in groups: print("  group",lo,hi,"check", round(sum(b["avg"] for b in L0[lo:hi])*0.01*HH/tot,6))
+mono=all(L0[i]["avg"]<=L0[i+1]["avg"] for i in range(99)); print("monotone", mono)
 # thresholds scaled with group factors (entry ticket for each percentile)
 def thr_scaled(p):
-    f = f_b50 if p<50 else f_5090 if p<90 else f_9099
-    return thr(p)*f
+    w=basis(p); return thr(p)*sum(F[k]*w[k] for k in range(3))
 for b in L0: b["entry"]=thr(b["lo"])
 
 # ---- deeper levels: geometric profile within bracket, rescaled to bracket total

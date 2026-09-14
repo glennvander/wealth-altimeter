@@ -284,7 +284,7 @@ footer{padding-block:32px 48px;color:var(--muted);font-size:14px;border-top:1px 
   <div class="wrap climb-intro">
     <div class="sec-head">
       <div><div class="eyebrow">3 · The climb</div><h2>Scroll up. Keep going.</h2></div>
-      <p>Eleven stacks stand on one sidewalk: the bottom half's average, the median household, then the average household in each exclusive band on the way up: 80th to 85th percentile, 85th to 90th, 90th to 95th, 95th to 99th, 99th to 99.9th, 99.9th to 99.99th, 99.99th to 99.999th, the top 0.001%, and Elon Musk. Exclusive matters: the 80th to 85th stack is the average of those 6.6 million households only, not dragged upward by anyone above them. The scale is always linear; only the ceiling rises as you scroll. Real landmarks pass at their real altitudes. Watch which stacks are still visible when you reach space.</p>
+      <p>Twelve stacks stand on one sidewalk: the bottom half's average, the median household, then the average household in each exclusive band on the way up: 80th to 85th percentile, 85th to 90th, 90th to 95th, 95th to 98th, 98th to 99th, 99th to 99.9th, 99.9th to 99.99th, 99.99th to 99.999th, the top 0.001%, and Elon Musk. Exclusive matters: the 80th to 85th stack is the average of those 6.6 million households only, not dragged upward by anyone above them. The bands narrow as they climb because the curve steepens: each percentile step near the top is a bigger dollar step than the one before. The scale is always linear; only the ceiling rises as you scroll. Real landmarks pass at their real altitudes. Watch which stacks are still visible when you reach space.</p>
     </div>
   </div>
   <div class="track" id="track">
@@ -391,7 +391,7 @@ footer{padding-block:32px 48px;color:var(--muted);font-size:14px;border-top:1px 
     <div>
       <h3>Method</h3>
       <ul>
-        <li><b>Group totals are anchored to the Fed.</b> The five Fed groups sum to $174.0 trillion across 132 million households. Every building's average is scaled so its group matches the Fed total exactly.</li>
+        <li><b>Group totals are anchored to the Fed.</b> The five Fed groups sum to $174.0 trillion across 132 million households. Survey-based averages are scaled by a factor that varies smoothly across percentiles and is solved so each Fed group matches its published total exactly, with no step at the group boundaries.</li>
         <li><b>Thresholds are survey figures.</b> The survey undercounts wealth relative to the Fed's macro totals, so averages on this page run 20 to 45 percent above what the thresholds alone would imply. Both are shown, and labelled.</li>
         <li><b>The top 0.1% is subdivided by estimate.</b> The Fed stops at the top 0.1% ($25.1 trillion). Its split into the top 0.01% ($14 trillion), top 0.001% ($10 trillion) and top 132 households ($6.1 trillion) follows the World Inequality Database's shape and the Forbes 400, and should be read as approximate.</li>
         <li><b>Headcount bands are survey-based.</b> The net-worth histogram counts households between survey thresholds, interpolated between published percentiles. Above $1 billion it uses about 1,300 households, consistent with the Forbes count of 959 individual billionaires plus near-billionaire households.</li>
@@ -632,7 +632,8 @@ const STACKS = [
   {k:"p80", label:"80th–85th", v: bandAvg(80,85), hh: DATA.HH*0.05},
   {k:"p85", label:"85th–90th", v: bandAvg(85,90), hh: DATA.HH*0.05},
   {k:"p90", label:"90th–95th", v: bandAvg(90,95), hh: DATA.HH*0.05},
-  {k:"p95", label:"95th–99th", v: bandAvg(95,99), hh: DATA.HH*0.04},
+  {k:"p95", label:"95th–98th", v: bandAvg(95,98), hh: DATA.HH*0.03},
+  {k:"p98", label:"98th–99th", v: bandAvg(98,99), hh: DATA.HH*0.01},
   {k:"p99", label:"99th–99.9th", v: sliceAvg(DATA.L1), hh: DATA.HH*0.009},
   {k:"p999", label:"99.9th–99.99th", v: sliceAvg(DATA.L2), hh: DATA.HH*0.0009},
   {k:"p9999", label:"99.99th–99.999th", v: sliceAvg(DATA.L3), hh: DATA.HH*0.00009},
@@ -653,7 +654,7 @@ function skyColor(H){
 }
 function sayFor(H){
   if (H < 3) return "Street level. The median household's stack is a sheet of paper; the bottom half of the country averages a coffee mug. The 80th to 85th percentile, the first rung of the top fifth, stands about as tall as an adult.";
-  if (H < 60) return "The 90th to 95th percentile is a basketball hoop, the 95th to 99th a two-story house. The 99th to 99.9th, which is nine-tenths of the famous 1%, clears an eight-story building. The median household is now a line on the ground.";
+  if (H < 60) return "The 90th to 95th percentile is a basketball hoop, the 95th to 98th a two-story house, the 98th to 99th a four-story walk-up. The 99th to 99.9th, nine-tenths of the famous 1%, clears eight stories. The median household is now a line on the ground.";
   if (H < 1100) return "The 99.9th to 99.99th percentile is a thirty-story tower. The 99.99th to 99.999th passes the Eiffel Tower. Everyone below the top 1% is now the pavement.";
   if (H < 12000) return "The top 0.001%, about 1,300 households, averages $7.6 billion: higher than Mont Blanc, most of the way to Everest. And one stack is still going.";
   if (H < 150000) return "Past cruising altitude, past the highest balloon jump anyone has survived. Space begins at 100 km. Every stack but one has flattened into the ground.";
