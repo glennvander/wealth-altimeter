@@ -245,7 +245,7 @@ footer{padding-block:32px 48px;color:var(--muted);font-size:14px;border-top:1px 
 <section id="street" class="wrap">
   <div class="sec-head">
     <div><div class="eyebrow">1 · Street level</div><h2>One hundred buildings</h2></div>
-    <p>Line up all 132 million households from poorest to richest and cut them into 100 percentiles of 1.32 million households each. Each building is the average stack in that slice, drawn to one linear scale. Pick how tall the chart is allowed to be. Whatever you pick, the last building will not fit.</p>
+    <p>Line up all 132 million households from poorest to richest and cut them into 100 equal slices of 1.32 million households each. Every building holds the same number of people by construction; what changes from one to the next is the money. Each building is the average stack in its slice, drawn to one linear scale. Pick how tall the chart is allowed to be. Whatever you pick, the last building will not fit.</p>
   </div>
   <div class="street-grid">
     <div>
@@ -522,7 +522,7 @@ function drawSkyline(){
 }
 function tipHTML(i){
   const b = DATA.L0[i]; const pct = i+1;
-  return `<b>${pct === 100 ? "Top 1%" : ordinal(pct) + " percentile"}</b><div class="r"><span>Average</span><span>${money(b.avg)}</span></div><div class="r"><span>Stack</span><span>${height(b.avg*M_PER_DOLLAR)}</span></div><div class="r"><span>Households</span><span>${count(DATA.HH/100)}</span></div>`;
+  return `<b>${pct === 100 ? "Top 1%" : ordinal(pct) + " percentile"}</b><div class="r"><span>Average</span><span>${money(b.avg)}</span></div><div class="r"><span>Stack</span><span>${height(b.avg*M_PER_DOLLAR)}</span></div><div class="r"><span>Net worth range</span><span>${i === 0 ? "≤ " + money(DATA.L0[1].entry) : money(b.entry) + " to " + (i === 99 ? money(MUSK) : money(DATA.L0[i+1].entry))}</span></div>`;
 }
 function ordinal(n){ const s = ["th","st","nd","rd"], v = n%100; return n + (s[(v-20)%10] || s[v] || s[0]); }
 function renderDetail(i){
@@ -534,13 +534,14 @@ function renderDetail(i){
   $("#detail").innerHTML = `
     <div class="lbl">Building ${pct} of 100</div>
     <div class="pct">${pct === 100 ? "Top 1%" : ordinal(pct)}<small>${pct === 100 ? "" : "percentile"}</small></div>
-    <div class="sub">${count(hh)} households · ${count(hh*PPH)} people · ${["bottom","second","middle","fourth","top"][Math.min(4,Math.floor(i/20))]} fifth</div>
+    <div class="sub">${["bottom","second","middle","fourth","top"][Math.min(4,Math.floor(i/20))]} fifth · one of 100 equal slices, so ${count(hh)} households (${count(hh*PPH)} people) like every other building</div>
     <dl>
       <dt>Average net worth</dt><dd class="hi">${money(b.avg)}</dd>
       <dt>Stack height</dt><dd class="hi">${height(m)}</dd>
+      <dt>Covers net worth from</dt><dd>${entry === null ? "the bottom" : money(entry)} to ${pct === 100 ? money(MUSK) : money(DATA.L0[i+1].entry)}</dd>
+      <dt>Households above this slice</dt><dd>${pct === 100 ? "none" : count((99-i)*hh)}</dd>
       <dt>Total in this slice</dt><dd>${money(total)}</dd>
       <dt>Share of all wealth</dt><dd>${share < 0 ? "−" : ""}${num(Math.abs(share), share < 1 ? 2 : 1)}%</dd>
-      <dt>Entry threshold (2023 survey)</dt><dd>${entry === null ? "—" : money(entry)}</dd>
       ${pct === 100 ? `<dt>Musk's stack ÷ this</dt><dd>${num(MUSK/b.avg)}×</dd>` : `<dt>Top 1% average ÷ this</dt><dd>${b.avg > 0 ? num(DATA.L0[99].avg/b.avg) + "×" : "—"}</dd>`}
     </dl>
     <div class="cmp">${b.avg < 0 ? `Below grade: the average household here owes <em>${money(-b.avg)}</em> more than it owns.` : `Each stack is <em>${compare(m)}</em>.${eq !== null && pct === 100 ? ` This one slice holds as much as the bottom <em>${eq}</em> buildings combined.` : ""}`}</div>
