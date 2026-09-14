@@ -79,19 +79,39 @@ mono=all(L0[i]["avg"]<=L0[i+1]["avg"] for i in range(99)); print("monotone", mon
 # thresholds scaled with group factors (entry ticket for each percentile)
 def thr_scaled(p):
     w=basis(p); return thr(p)*sum(F[k]*w[k] for k in range(3))
-for b in L0: b["entry"]=thr(b["lo"])
+def sf(p):
+    w=basis(p); return sum(F[k]*w[k] for k in range(3))
+for b in L0: b["entry"]=thr(b["lo"])*sf(b["lo"]) if b["lo"]<99 else thr(99)
+for i,b in enumerate(L0): b["hi"]=L0[i+1]["entry"] if i<99 else 900e9
+b0=[i for i,b in enumerate(L0) if not (b["entry"]-1e-6<=b["avg"]<=b["hi"]+1e-6)]
+print("L0 buckets whose average is outside its range:", b0)
 
 # ---- deeper levels: geometric profile within bracket, rescaled to bracket total
 def sub(lo,hi,n,total,tl,tu):
-    step=(hi-lo)/n
-    bs=[{"lo":lo+i*step,"hi":lo+(i+1)*step,"avg":tl*(tu/tl)**((i+0.5)/n)} for i in range(n)]
+    """n equal slices between percentiles lo..hi whose thresholds run tl..tu; the quantile curve
+    q(u)=tl*(tu/tl)**(u**k) is bent (k solved by bisection) so the bracket's mean equals total/households."""
+    step=(hi-lo)/n; hh=(hi-lo)/100*HH; target=total/hh
+    q=lambda u,k: tl*(tu/tl)**(u**k)
+    mean=lambda k: sum(q((j+0.5)/2000,k) for j in range(2000))/2000
+    a,b=0.05,60.0
+    for _ in range(80):
+        m=(a+b)/2
+        if mean(m)>target: a=m
+        else: b=m
+    k=(a+b)/2
+    bs=[]
+    for i in range(n):
+        u0,u1=i/n,(i+1)/n
+        avg=sum(q(u0+(u1-u0)*(j+0.5)/200,k) for j in range(200))/200
+        bs.append({"lo":lo+i*step,"hi":lo+(i+1)*step,"avg":avg,"entry":q(u0,k),"top":q(u1,k)})
     s=sum(b["avg"]*step/100*HH for b in bs); f=total/s
-    for i,b in enumerate(bs): b["avg"]*=f; b["entry"]=tl*(tu/tl)**(i/n)
+    for b in bs: b["avg"]*=f   # residual numerical correction, ~1e-3
+    print(f"  bracket {lo}-{hi}: k={k:.2f} f={f:.4f} slices", [round(b["avg"]/1e6,1) for b in bs])
     return bs
-L1=sub(99,99.9,9,G["p99_999"],thr(99),thr(99.9)); L1.append({"lo":99.9,"hi":100,"avg":G["top01"]/(0.001*HH),"entry":thr(99.9)})
-L2=sub(99.9,99.99,9,G["top01"]-TOP001,thr(99.9),thr(99.99)); L2.append({"lo":99.99,"hi":100,"avg":TOP001/(0.0001*HH),"entry":thr(99.99)})
-L3=sub(99.99,99.999,9,TOP001-TOP0001,thr(99.99),thr(99.999)); L3.append({"lo":99.999,"hi":100,"avg":TOP0001/(0.00001*HH),"entry":thr(99.999)})
-L4=sub(99.999,99.9999,9,TOP0001-TOP00001,thr(99.999),thr(99.9999)); L4.append({"lo":99.9999,"hi":100,"avg":TOP00001/(0.000001*HH),"entry":thr(99.9999)})
+L1=sub(99,99.9,9,G["p99_999"],thr(99),thr(99.9)); L1.append({"lo":99.9,"hi":100,"avg":G["top01"]/(0.001*HH),"entry":thr(99.9),"top":900e9})
+L2=sub(99.9,99.99,9,G["top01"]-TOP001,thr(99.9),thr(99.99)); L2.append({"lo":99.99,"hi":100,"avg":TOP001/(0.0001*HH),"entry":thr(99.99),"top":900e9})
+L3=sub(99.99,99.999,9,TOP001-TOP0001,thr(99.99),thr(99.999)); L3.append({"lo":99.999,"hi":100,"avg":TOP0001/(0.00001*HH),"entry":thr(99.999),"top":900e9})
+L4=sub(99.999,99.9999,9,TOP0001-TOP00001,thr(99.999),thr(99.9999)); L4.append({"lo":99.9999,"hi":100,"avg":TOP00001/(0.000001*HH),"entry":thr(99.9999),"top":900e9})
 rest122=(TOP00001-named_sum)/122
 L5=[{"name":"Ranks 11–132","hh":122,"total":TOP00001-named_sum,"avg":rest122,"src":"Forbes 400 tail"}]+[{"name":n,"hh":1,"total":v*1e9,"avg":v*1e9,"src":s} for n,v,s in reversed(NAMED)]
 # quintile shares (actual 2026)
@@ -145,6 +165,7 @@ def band_sum(a,b): return sum(v for h,v in raw.items() if a<=keyval(h)<b)*1e3
 IB=[(0,15e3,"Under $15K"),(15e3,25e3,"$15K–25K"),(25e3,35e3,"$25K–35K"),(35e3,50e3,"$35K–50K"),(50e3,75e3,"$50K–75K"),(75e3,100e3,"$75K–100K"),(100e3,150e3,"$100K–150K"),(150e3,200e3,"$150K–200K"),(200e3,1e18,"$200K+")]
 income_bands=[{"lo":lo,"hi":(hi if hi<1e17 else None),"label":lab,"hh":band_sum(lo,hi if hi<1e17 else 1e18)} for lo,hi,lab in IB]
 print("income hh", sum(b["hh"] for b in income_bands)/1e6, IHH/1e6)
+out["fed_factor"]=[round(sf(p),4) if p<99 else 1.0 for p in range(0,100)]
 out["bands"]=bands; out["income_bands"]=income_bands; out["income"]={"HH":IHH,"median":83730,"mean":121000,
   "ladder":[["Median household",83730,"Census 2024"],["Top 10% entry",251036,"DQYDJ 2025"],["Top 1% entry",659060,"DQYDJ 2025"],["Top 0.1% entry",3.2e6,"Saez, ≈ 2024, incl. capital gains"],["Top 0.01% entry",13e6,"Saez/PSZ, ≈ 2024 est."],["Top 400 average",318e6,"IRS, 2014 (last published)"]]}
 json.dump(out,open("model.json","w"))

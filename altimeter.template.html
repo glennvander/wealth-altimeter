@@ -345,7 +345,7 @@ footer{padding-block:32px 48px;color:var(--muted);font-size:14px;border-top:1px 
       <label class="lbl" for="nw">Household net worth</label>
       <div class="field" style="margin-top:8px"><span>$</span><input id="nw" type="text" inputmode="numeric" value="250,000" autocomplete="off" spellcheck="false" aria-describedby="youhelp"></div>
       <div class="chips" id="chips"></div>
-      <p id="youhelp" class="legend-note" style="margin-top:16px">Percentile from the 2023 Survey of Consumer Finances thresholds, the latest household-level survey; the top tail is filled in from the World Inequality Database and Forbes. Negative numbers are allowed.</p>
+      <p id="youhelp" class="legend-note" style="margin-top:16px">Type the number the way you would compute it yourself: that is how the survey measures it, and your percentile comes from the 2023 Survey of Consumer Finances thresholds. The buildings above are drawn in the Federal Reserve's dollars, which run higher than survey dollars for most households, so the card also shows what your household would carry in the Fed's accounting. Negative numbers are allowed.</p>
       <div class="ruler-wrap"><div class="ruler" id="ruler"></div></div>
     </div>
     <div class="you-out" id="youout" aria-live="polite"></div>
@@ -392,8 +392,8 @@ footer{padding-block:32px 48px;color:var(--muted);font-size:14px;border-top:1px 
       <h3>Method</h3>
       <ul>
         <li><b>Group totals are anchored to the Fed.</b> The five Fed groups sum to $174.0 trillion across 132 million households. Survey-based averages are scaled by a factor that varies smoothly across percentiles and is solved so each Fed group matches its published total exactly, with no step at the group boundaries.</li>
-        <li><b>Thresholds are survey figures.</b> The survey undercounts wealth relative to the Fed's macro totals, so averages on this page run 20 to 45 percent above what the thresholds alone would imply. Both are shown, and labelled.</li>
-        <li><b>The top 0.1% is subdivided by estimate.</b> The Fed stops at the top 0.1% ($25.1 trillion). Its split into the top 0.01% ($14 trillion), top 0.001% ($10 trillion) and top 132 households ($6.1 trillion) follows the World Inequality Database's shape and the Forbes 400, and should be read as approximate.</li>
+        <li><b>Two kinds of dollars, kept apart.</b> The survey undercounts wealth relative to the Fed's macro totals: below the 99th percentile the Fed counts roughly 17 to 70 percent more per household, most of it in the middle, where pension entitlements and under-reported assets are concentrated. Every building, its average and its dollar range are in Fed dollars, so the average always sits inside the range. The "find your building" lookup, the headcount bands and the two ladders use survey dollars, because that is how a person measures their own net worth, and each says so.</li>
+        <li><b>Inside the top 1%, the curve is bent, not scaled.</b> There the Fed totals sit slightly below what the survey and World Inequality Database thresholds imply, so the thresholds are kept and the curve between them is bent until each bracket's total matches. The Fed stops at the top 0.1% ($25.1 trillion); its split into the top 0.01% ($14 trillion), top 0.001% ($10 trillion) and top 132 households ($6.1 trillion) follows the World Inequality Database's shape and the Forbes 400, and should be read as approximate.</li>
         <li><b>Headcount bands are survey-based.</b> The net-worth histogram counts households between survey thresholds, interpolated between published percentiles. Above $1 billion it uses about 1,300 households, consistent with the Forbes count of 959 individual billionaires plus near-billionaire households.</li>
         <li><b>The climb uses exclusive bands.</b> Each stack in the climb is the average of the households inside that percentile range only. Nested "top X%" averages are dragged upward by everyone above; the 100 buildings and the drill-down still show them where the label says "Top".</li>
         <li><b>People versus households.</b> Counts are households; the people figure multiplies by 2.58, the 2026 average household size.</li>
@@ -522,13 +522,12 @@ function drawSkyline(){
 }
 function tipHTML(i){
   const b = DATA.L0[i]; const pct = i+1;
-  return `<b>${pct === 100 ? "Top 1%" : ordinal(pct) + " percentile"}</b><div class="r"><span>Average</span><span>${money(b.avg)}</span></div><div class="r"><span>Stack</span><span>${height(b.avg*M_PER_DOLLAR)}</span></div><div class="r"><span>Net worth range</span><span>${i === 0 ? "≤ " + money(DATA.L0[1].entry) : money(b.entry) + " to " + (i === 99 ? money(MUSK) : money(DATA.L0[i+1].entry))}</span></div>`;
+  return `<b>${pct === 100 ? "Top 1%" : ordinal(pct) + " percentile"}</b><div class="r"><span>Average</span><span>${money(b.avg)}</span></div><div class="r"><span>Stack</span><span>${height(b.avg*M_PER_DOLLAR)}</span></div><div class="r"><span>Net worth range</span><span>${money(b.entry)} to ${money(b.hi)}</span></div>`;
 }
 function ordinal(n){ const s = ["th","st","nd","rd"], v = n%100; return n + (s[(v-20)%10] || s[v] || s[0]); }
 function renderDetail(i){
   const b = DATA.L0[i], hh = DATA.HH/100, total = b.avg*hh, m = b.avg*M_PER_DOLLAR;
   const share = total/DATA.TOTAL*100;
-  const entry = i === 0 ? null : b.entry;
   const pct = i+1;
   const eq = total > 0 ? (() => { let acc = 0, k = 0; for (; k < 100; k++){ acc += Math.max(0, DATA.L0[k].avg)*hh; if (acc >= total) break; } return k; })() : null;
   $("#detail").innerHTML = `
@@ -538,7 +537,7 @@ function renderDetail(i){
     <dl>
       <dt>Average net worth</dt><dd class="hi">${money(b.avg)}</dd>
       <dt>Stack height</dt><dd class="hi">${height(m)}</dd>
-      <dt>Covers net worth from</dt><dd>${entry === null ? "the bottom" : money(entry)} to ${pct === 100 ? money(MUSK) : money(DATA.L0[i+1].entry)}</dd>
+      <dt>Covers net worth from</dt><dd>${money(b.entry)} to ${money(b.hi)}</dd>
       <dt>Households above this slice</dt><dd>${pct === 100 ? "none" : count((99-i)*hh)}</dd>
       <dt>Total in this slice</dt><dd>${money(total)}</dd>
       <dt>Share of all wealth</dt><dd>${share < 0 ? "−" : ""}${num(Math.abs(share), share < 1 ? 2 : 1)}%</dd>
@@ -568,7 +567,7 @@ function drawDrill(){
   const W = drillEl.clientWidth || 700, H = Math.max(320, Math.min(440, W*0.55));
   const padL = 64, padR = 8, padT = 30, padB = 46, iw = W-padL-padR, base = H-padB, ih = base-padT;
   let items;
-  if (L.buckets){ items = L.buckets.map(b => ({label: pctLabel(b.lo, b.hi), avg:b.avg, hh:L.hh, total:b.avg*L.hh, entry:b.entry, last: b.hi >= 100-1e-9})); }
+  if (L.buckets){ items = L.buckets.map(b => ({label: pctLabel(b.lo, b.hi), avg:b.avg, hh:L.hh, total:b.avg*L.hh, entry:b.entry, top:b.top, last: b.hi >= 100-1e-9})); }
   else { items = DATA.L5.map((p, i) => ({label:p.name, avg:p.avg, hh:p.hh, total:p.total, src:p.src, last: i === DATA.L5.length-1, agg: p.hh > 1})); }
   const named = !L.buckets;
   const capVal = named ? items[items.length-1].avg*1.04 : Math.max(...items.slice(0,-1).map(d => d.avg)) * 1.12;
@@ -602,7 +601,7 @@ function drawDrill(){
   const cap = svgEl("text", {x:W-padR, y:padT-10, "text-anchor":"end"}); cap.textContent = "ceiling " + money(capVal,2) + " · " + height(capVal*M_PER_DOLLAR); if (!items.some(d => d.avg > capVal)) svg.appendChild(cap);
   drillEl.appendChild(svg);
   svg.addEventListener("pointermove", e => { const t = e.target.closest(".bar"); if (!t) { drillTip.classList.remove("on"); return; } const d = items[+t.dataset.i]; const rect = drillEl.getBoundingClientRect(); drillTip.style.left = (e.clientX-rect.left)+"px"; drillTip.style.top = (e.clientY-rect.top)+"px";
-    drillTip.innerHTML = `<b>${named ? d.label : d.label + (d.label.startsWith("Top") ? "" : " percentile")}</b><div class="r"><span>${named && !d.agg ? "Net worth" : "Average"}</span><span>${money(d.avg)}</span></div><div class="r"><span>Stack</span><span>${height(d.avg*M_PER_DOLLAR)}</span></div><div class="r"><span>Households</span><span>${count(d.hh)}</span></div><div class="r"><span>Total</span><span>${money(d.total)}</span></div>${d.entry ? `<div class="r"><span>Entry (est.)</span><span>${money(d.entry)}</span></div>` : ""}${d.src ? `<div class="r"><span>Source of wealth</span><span>${d.src}</span></div>` : ""}<div class="r"><span>Height compares to</span><span style="text-align:right">${compare(d.avg*M_PER_DOLLAR)}</span></div>`;
+    drillTip.innerHTML = `<b>${named ? d.label : d.label + (d.label.startsWith("Top") ? "" : " percentile")}</b><div class="r"><span>${named && !d.agg ? "Net worth" : "Average"}</span><span>${money(d.avg)}</span></div><div class="r"><span>Stack</span><span>${height(d.avg*M_PER_DOLLAR)}</span></div><div class="r"><span>Households</span><span>${count(d.hh)}</span></div><div class="r"><span>Total</span><span>${money(d.total)}</span></div>${d.entry ? `<div class="r"><span>Slice runs</span><span>${money(d.entry)} to ${d.top >= MUSK ? money(MUSK) : money(d.top)}</span></div>` : ""}${d.src ? `<div class="r"><span>Source of wealth</span><span>${d.src}</span></div>` : ""}<div class="r"><span>Height compares to</span><span style="text-align:right">${compare(d.avg*M_PER_DOLLAR)}</span></div>`;
     drillTip.classList.add("on"); });
   svg.addEventListener("pointerleave", () => drillTip.classList.remove("on"));
   svg.addEventListener("click", e => { const t = e.target.closest(".bar"); if (!t) return; const d = items[+t.dataset.i]; if (d.last && drill.level < 4) setLevel(drill.level+1); });
@@ -825,7 +824,8 @@ function renderYou(){
       <dt>Stack height</dt><dd>${v > 0 ? height(m) : "below grade"}</dd>
       <dt>Households below you</dt><dd>${count(belowHH)}</dd>
       <dt>Households above you</dt><dd>${count(Math.max(0, DATA.HH-belowHH))}</dd>
-      <dt>Your percentile's average</dt><dd>${money(DATA.L0[bucket].avg)}</dd>
+      <dt>In Fed dollars (this page)</dt><dd>${v > 0 ? money(v*DATA.fed_factor[bucket]) : money(v)}</dd>
+      <dt>Your building's average</dt><dd>${money(DATA.L0[bucket].avg)}</dd>
       <dt>Top 1% average ÷ yours</dt><dd>${v > 0 ? num(DATA.L0[99].avg/v) + "×" : "—"}</dd>
       <dt>Musk's stack ÷ yours</dt><dd>${v > 0 ? num(MUSK/v) + "×" : "—"}</dd>
     </dl>
