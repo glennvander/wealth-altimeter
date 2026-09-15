@@ -231,7 +231,7 @@ footer{padding-block:32px 48px;color:var(--muted);font-size:14px;border-top:1px 
           <line x1="2" y1="130" x2="118" y2="130" stroke="currentColor" stroke-width="2"/>
           <text x="88" y="145" text-anchor="middle" font-family="IBM Plex Mono,monospace" font-size="11" fill="var(--muted)">$1,000,000</text>
         </svg>
-        <p class="cap">One million dollars in hundreds is a stack <b class="num">1.09 m</b> tall, roughly the height of a six-year-old. Every height on this page follows from that.</p>
+        <p class="cap">One million dollars in hundreds is a stack <b class="num">3 ft 7 in</b> tall, roughly the height of a six-year-old. Every height on this page follows from that.</p>
       </div>
     </div>
   </div>
@@ -292,7 +292,7 @@ footer{padding-block:32px 48px;color:var(--muted);font-size:14px;border-top:1px 
       <div class="stars"></div>
       <svg id="climbsvg" aria-label="Wealth stacks against real altitudes"></svg>
       <div class="hud">
-        <div class="alt"><span id="altv">0 m</span><small>ceiling</small></div>
+        <div class="alt"><span id="altv">0 ft</span><small>ceiling</small></div>
         <div class="say" id="say"></div>
         <div class="flat" id="flat"></div>
       </div>
@@ -302,7 +302,7 @@ footer{padding-block:32px 48px;color:var(--muted);font-size:14px;border-top:1px 
   </div>
   <div class="wrap climb-outro">
     <div class="big">Nobody reaches the Moon. Not Musk, not the top 1% together, not the whole country.</div>
-    <p>The Moon is 384,400 km away. In $100 bills that is <b class="num">$352 trillion</b>, twice the net worth of every American household combined. Musk's stack stops near 980 km, above the space station and the Starlink shell. The median household's stack is a sheet of paper on the ground beside it, about four million times shorter.</p>
+    <p>The Moon is 239,000 miles away. In $100 bills that is <b class="num">$352 trillion</b>, twice the net worth of every American household combined. Musk's stack stops near 610 miles up, above the space station and the Starlink shell. The median household's stack is a sheet of paper on the ground beside it, about four million times shorter.</p>
     <p>The irony the original video landed on still holds, and it is sharper now: the average one-percenter, the 12-story building everyone got angry at, stands closer to the family with nothing than to the man in orbit.</p>
   </div>
 </section>
@@ -385,7 +385,7 @@ footer{padding-block:32px 48px;color:var(--muted);font-size:14px;border-top:1px 
         <li><a href="https://www.forbes.com/real-time-billionaires/" target="_blank" rel="noopener">Forbes real-time billionaires list</a>, figures as of mid-August 2026, rounded. Musk is shown at $900 billion; Forbes has had him between $860 billion and $960 billion since the SpaceX listing in June 2026.</li>
         <li><a href="https://people.duke.edu/~dandan/webfiles/PapersPI/Building%20a%20Better%20America.pdf" target="_blank" rel="noopener">Norton and Ariely, "Building a Better America, One Wealth Quintile at a Time"</a>, 2011. The ideal and estimated distributions.</li>
         <li><a href="https://www.census.gov/data/tables/time-series/demo/income-poverty/cps-hinc/hinc-01.html" target="_blank" rel="noopener">Census Bureau, CPS ASEC table HINC-01</a>, households by total money income in 2024: 134.8 million households, median $83,730. Top income thresholds from DQYDJ (2025 release), Saez (top 0.1% and 0.01%, with realized capital gains) and the IRS top-400 series (2014).</li>
-        <li>Landmark heights and orbital altitudes are standard published figures. $100 bills are 0.0043 in (0.109 mm) thick, so $1 million is 1.09 m.</li>
+        <li>Landmark heights and orbital altitudes are standard published figures. $100 bills are 0.0043 in thick, so 10,000 of them, $1 million, stack 43 inches: 3 ft 7 in.</li>
       </ol>
     </div>
     <div>
@@ -397,7 +397,7 @@ footer{padding-block:32px 48px;color:var(--muted);font-size:14px;border-top:1px 
         <li><b>Headcount bands are survey-based.</b> The net-worth histogram counts households between survey thresholds, interpolated between published percentiles. Above $1 billion it uses about 1,300 households, consistent with the Forbes count of 959 individual billionaires plus near-billionaire households.</li>
         <li><b>The climb uses exclusive bands.</b> Each stack in the climb is the average of the households inside that percentile range only. Nested "top X%" averages are dragged upward by everyone above; the 100 buildings and the drill-down still show them where the label says "Top".</li>
         <li><b>People versus households.</b> Counts are households; the people figure multiplies by 2.58, the 2026 average household size.</li>
-        <li><b>Everything is linear.</b> No chart on this page uses a log scale. What changes is only the ceiling.</li>
+        <li><b>Everything is linear, and in feet.</b> No chart on this page uses a log scale; what changes is only the ceiling. Heights are shown in inches below a foot, feet up to 150,000 ft, and miles beyond that.</li>
       </ul>
       <div class="tablewrap"><table class="t" id="grouptable"></table></div>
     </div>
@@ -429,9 +429,13 @@ function money(v, sig=3){
   return (neg?"−":"") + "$" + num(v);
 }
 function height(m){
-  const a = Math.abs(m); let s;
-  if (a < 0.01) s = num(a*1000,1) + " mm"; else if (a < 1) s = num(a*100, a<0.1?1:0) + " cm"; else if (a < 1000) s = num(a, a<10?1:0) + " m";
-  else if (a < 1e6) s = num(a/1000, a<1e4?2:a<1e5?1:0) + " km"; else s = num(a/1000) + " km";
+  // internal unit is metres; everything is shown in inches, feet or miles
+  const a = Math.abs(m), ft = a/0.3048, inch = ft*12, mi = a/1609.344; let s;
+  if (inch < 1) s = num(inch, inch < 0.1 ? 2 : 1) + " in";
+  else if (ft < 1) s = num(inch, inch < 10 ? 1 : 0) + " in";
+  else if (ft < 10) s = num(ft, 1) + " ft";
+  else if (ft < 150000) s = num(ft) + " ft";
+  else s = num(mi, mi < 10 ? 1 : 0) + " mi";
   return (m<0?"−":"") + s;
 }
 function count(n){ if (n >= 1e6) return num(n/1e6, n<1e7?2:1) + " million"; if (n >= 1e3) return num(n); return num(n); }
@@ -657,8 +661,8 @@ function sayFor(H){
   if (H < 60) return "The 90th to 95th percentile is a basketball hoop, the 95th to 98th a two-story house, the 98th to 99th a four-story walk-up. The 99th to 99.9th, nine-tenths of the famous 1%, clears eight stories. The median household is now a line on the ground.";
   if (H < 1100) return "The 99.9th to 99.99th percentile is a thirty-story tower. The 99.99th to 99.999th passes the Eiffel Tower. Everyone below the top 1% is now the pavement.";
   if (H < 12000) return "The top 0.001%, about 1,300 households, averages $7.6 billion: higher than Mont Blanc, most of the way to Everest. And one stack is still going.";
-  if (H < 150000) return "Past cruising altitude, past the highest balloon jump anyone has survived. Space begins at 100 km. Every stack but one has flattened into the ground.";
-  if (H < 2000000) return "Elon Musk's stack passes the International Space Station at 408 km and the Starlink shell at 550 km, and stops near 980 km. Nothing else on this page is visible any more.";
+  if (H < 150000) return "Past cruising altitude, past the highest balloon jump anyone has survived. Space begins at 62 miles. Every stack but one has flattened into the ground.";
+  if (H < 2000000) return "Elon Musk's stack passes the International Space Station at 254 miles and the Starlink shell at 342 miles, and stops near 610 miles up. Nothing else on this page is visible any more.";
   if (H < 100000000) return "Nothing lives up here. Even the entire top 1% piled into one stack, $55 trillion, only reaches past the GPS satellites.";
   return "Nobody reaches the Moon. Every dollar every American household owns, $174 trillion stacked as one pile, gets half way.";
 }
@@ -766,12 +770,12 @@ function drawLadders(){
     {name:"The very top", w: MUSK, i: DATA.income.ladder[5][1], wl:"Elon Musk", il:"Top 400 average (IRS, 2014)"}
   ];
   const W = el.clientWidth || 800, H = Math.max(320, Math.min(460, W*0.5)); const padL = 52, padR = 12, padT = 34, padB = 44, iw = W-padL-padR, base = H-padB, ih = base-padT;
-  const cap = 400; // metres
+  const FT = 0.3048; const cap = 1300*FT; // 1,300 ft ceiling, internal metres
   const y = m => base - Math.min(m, cap)/cap*ih;
   el.querySelector("svg")?.remove();
   const svg = svgEl("svg", {viewBox:`0 0 ${W} ${H}`, width:W, height:H, role:"img", "aria-label":"Wealth and income thresholds as stack heights, one linear scale"});
-  [100,200,300,400].forEach(v => { svg.appendChild(svgEl("line", {x1:padL, x2:W-padR, y1:y(v), y2:y(v), stroke:"var(--grid)"})); const t = svgEl("text", {x:padL-6, y:y(v)+4, "text-anchor":"end"}); t.textContent = v + " m"; svg.appendChild(t); });
-  [[93,"Statue of Liberty"],[330,"Eiffel Tower"]].forEach(([a,l]) => { svg.appendChild(svgEl("line", {x1:padL, x2:W-padR, y1:y(a), y2:y(a), stroke:"var(--muted)", "stroke-dasharray":"3 5", "stroke-opacity":.6})); const t = svgEl("text", {x:padL+6, y:y(a)-5, "text-anchor":"start"}); t.textContent = l + " · " + a + " m"; svg.appendChild(t); });
+  [250,500,750,1000,1250].forEach(f => { const v = f*FT; svg.appendChild(svgEl("line", {x1:padL, x2:W-padR, y1:y(v), y2:y(v), stroke:"var(--grid)"})); const t = svgEl("text", {x:padL-6, y:y(v)+4, "text-anchor":"end"}); t.textContent = num(f) + " ft"; svg.appendChild(t); });
+  [[93,"Statue of Liberty"],[330,"Eiffel Tower"]].forEach(([a,l]) => { svg.appendChild(svgEl("line", {x1:padL, x2:W-padR, y1:y(a), y2:y(a), stroke:"var(--muted)", "stroke-dasharray":"3 5", "stroke-opacity":.6})); const t = svgEl("text", {x:padL+6, y:y(a)-5, "text-anchor":"start"}); t.textContent = l + " · " + height(a); svg.appendChild(t); });
   const n = rungs.length, slot = iw/n, bw = Math.min(40, slot*0.28);
   const items = [];
   rungs.forEach((r, i) => {
@@ -781,7 +785,7 @@ function drawLadders(){
       const rect = svgEl("rect", {x, y:top, width:bw, height:Math.max(1.5, base-top), fill:c, class:"bar"}); rect.dataset.i = items.length; svg.appendChild(rect);
       items.push({rung:r, k, v, m});
       if (clipped){ svg.appendChild(svgEl("line", {x1:x-2, x2:x+bw+2, y1:padT+7, y2:padT+2, stroke:"var(--panel)", "stroke-width":2})); svg.appendChild(svgEl("line", {x1:x-2, x2:x+bw+2, y1:padT+13, y2:padT+8, stroke:"var(--panel)", "stroke-width":2})); const t = svgEl("text", {x:x+bw/2, y:padT-8, "text-anchor":"middle", fill:"var(--ink)", "font-weight":"500"}); t.textContent = "×" + num(m/cap); svg.appendChild(t); }
-      else { const t = svgEl("text", {x:x+bw/2, y:Math.min(top-5, base-4), "text-anchor":"middle", fill:"var(--ink)"}); t.textContent = m < 1 ? num(m*100) + " cm" : height(m); svg.appendChild(t); }
+      else { const t = svgEl("text", {x:x+bw/2, y:Math.min(top-5, base-4), "text-anchor":"middle", fill:"var(--ink)"}); t.textContent = height(m); svg.appendChild(t); }
     });
     const lab = svgEl("text", {x:cx, y:base+16, "text-anchor":"middle", fill:"var(--ink)"}); lab.textContent = r.name; svg.appendChild(lab);
     const lab2 = svgEl("text", {x:cx, y:base+30, "text-anchor":"middle"}); lab2.textContent = money(r.w) + " vs " + money(r.i) + " · " + num(r.w/r.i, r.w/r.i < 10 ? 1 : 0) + "×"; svg.appendChild(lab2);
