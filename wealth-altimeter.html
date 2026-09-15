@@ -544,6 +544,7 @@ function ordinal(n){ const s = ["th","st","nd","rd"], v = n%100; return n + (s[(
 function renderDetail(i){
   const b = DATA.L0[i], hh = DATA.HH/100, total = b.avg*hh, m = b.avg*M_PER_DOLLAR;
   const share = total/DATA.TOTAL*100;
+  const cum = DATA.L0.slice(0, i+1).reduce((s,x) => s + x.avg, 0)*hh/DATA.TOTAL*100;
   const pct = i+1;
   const eq = total > 0 ? (() => { let acc = 0, k = 0; for (; k < 100; k++){ acc += Math.max(0, DATA.L0[k].avg)*hh; if (acc >= total) break; } return k; })() : null;
   $("#detail").innerHTML = `
@@ -557,6 +558,8 @@ function renderDetail(i){
       <dt>Households above this slice</dt><dd>${pct === 100 ? "none" : count((99-i)*hh)}</dd>
       <dt>Total in this slice</dt><dd>${money(total)}</dd>
       <dt>Share of all wealth</dt><dd>${share < 0 ? "−" : ""}${num(Math.abs(share), share < 1 ? 2 : 1)}%</dd>
+      <dt>Cumulative, buildings 1–${pct}</dt><dd>${cum < 0 ? "−" : ""}${num(Math.abs(cum), Math.abs(cum) < 1 ? 2 : 1)}%</dd>
+      ${pct < 100 ? `<dt>Held by buildings ${pct+1}–100</dt><dd>${num(100-cum, 1)}%</dd>` : ""}
       ${pct === 100 ? `<dt>Musk's stack ÷ this</dt><dd>${num(MUSK/b.avg)}×</dd>` : `<dt>Top 1% average ÷ this</dt><dd>${b.avg > 0 ? num(DATA.L0[99].avg/b.avg) + "×" : "—"}</dd>`}
     </dl>
     <div class="cmp">${b.avg < 0 ? `Below grade: the average household here owes <em>${money(-b.avg)}</em> more than it owns.` : `Each stack is <em>${compare(m)}</em>.${eq !== null && pct === 100 ? ` This one slice holds as much as the bottom <em>${eq}</em> buildings combined.` : ""}`}</div>
