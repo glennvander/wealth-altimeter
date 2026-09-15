@@ -97,7 +97,7 @@ button:focus-visible,input:focus-visible,[tabindex]:focus-visible{outline:2px so
 .detail .sub{color:var(--muted);font-size:15px;margin-top:6px}
 .detail dl{margin:18px 0 0;display:grid;grid-template-columns:auto 1fr;gap:9px 14px;font-size:15px}
 .detail dt{color:var(--muted)}
-.detail dd{margin:0;text-align:right;font-family:"IBM Plex Mono",monospace;font-size:14px;font-variant-numeric:tabular-nums}
+.detail dd{margin:0;text-align:right;font-family:"IBM Plex Mono",monospace;font-size:14px;font-variant-numeric:tabular-nums;white-space:nowrap}
 .detail dd.hi{color:var(--green);font-weight:500}
 .detail .cmp{margin-top:16px;padding-top:14px;border-top:1px dashed var(--line);font-size:16px;font-style:italic}
 .detail .cmp em{font-style:normal;color:var(--amber)}
@@ -263,6 +263,7 @@ footer{padding-block:32px 48px;color:var(--muted);font-size:14px;border-top:1px 
         <span style="border-color:var(--q1)">Bottom 20%</span><span style="border-color:var(--q2)">Second 20%</span><span style="border-color:var(--q3)">Middle 20%</span><span style="border-color:var(--q4)">Fourth 20%</span><span style="border-color:var(--q5)">Top 20%</span>
       </div>
       <p class="legend-note">Buildings that pass the chart's ceiling are cut off and marked with how many times taller they really are. The bottom eight percentiles are below grade: their debts exceed what they own.</p>
+      <p class="legend-note" id="skynote" aria-live="polite"></p>
     </div>
     <aside class="detail" id="detail" aria-live="polite"></aside>
   </div>
@@ -496,20 +497,31 @@ function drawSkyline(){
   });
   svg.appendChild(grid);
   const bars = svgEl("g");
+  const nClipped = L0.filter(b => b.avg > capVal).length, labelEvery = Math.max(1, Math.ceil(34/bw));
+  const thin = [];
   L0.forEach((b, i) => {
     const x = padL + i*bw + gap/2, w = Math.max(1, bw - gap);
     const clipped = b.avg > capVal;
     let r;
     if (b.avg < 0){ r = svgEl("rect", {x, y:base+2, width:w, height:gradeH-4, fill:"var(--red)", "fill-opacity":".85"}); }
-    else { const top = clipped ? padT : y(b.avg); r = svgEl("rect", {x, y:top, width:w, height:Math.max(1, base-top), fill:quintColor(i)}); }
+    else { const top = clipped ? padT : y(b.avg); const h = base-top; if (h < 2) thin.push(i); r = svgEl("rect", {x, y:h < 2 ? base-2 : top, width:w, height:Math.max(2, h), fill:quintColor(i)}); }
     r.dataset.i = i; r.setAttribute("class","bar"); r.style.cursor = "pointer"; bars.appendChild(r);
     if (clipped){
       bars.appendChild(svgEl("line", {x1:x-1, x2:x+w+1, y1:padT+6, y2:padT+2, stroke:"var(--bg)", "stroke-width":2}));
       bars.appendChild(svgEl("line", {x1:x-1, x2:x+w+1, y1:padT+11, y2:padT+7, stroke:"var(--bg)", "stroke-width":2}));
-      const t = svgEl("text", {x:x+w/2, y:padT-8, "text-anchor":"middle", fill:"var(--ink)", "font-weight":"500"});
-      t.textContent = "×" + num(b.avg/capVal, b.avg/capVal < 10 ? 1 : 0); bars.appendChild(t);
+      if ((99-i) % labelEvery === 0){
+        const t = svgEl("text", {x:x+w/2, y:padT-8, "text-anchor":"middle", fill:"var(--ink)", "font-weight":"500"});
+        t.textContent = "×" + num(b.avg/capVal, b.avg/capVal < 10 ? 1 : 0); bars.appendChild(t);
+      }
     }
   });
+  const noteEl = document.getElementById("skynote");
+  if (noteEl){
+    const parts = [];
+    if (thin.length) parts.push(`Buildings ${thin[0]+1} to ${thin[thin.length-1]+1} hold between ${money(L0[thin[0]].avg)} and ${money(L0[thin[thin.length-1]].avg)} on average: they are drawn as two-pixel stubs because at this ceiling they would be thinner than a pixel.`);
+    if (nClipped) parts.push(`${nClipped} building${nClipped > 1 ? "s pass" : " passes"} the ceiling${nClipped > 1 && labelEvery > 1 ? `; only every ${labelEvery}${labelEvery === 2 ? "nd" : labelEvery === 3 ? "rd" : "th"} multiplier is labelled to keep them readable, hover any bar for its own` : ""}.`);
+    noteEl.textContent = parts.join(" ");
+  }
   svg.appendChild(bars);
   svg.appendChild(svgEl("line", {class:"base", x1:padL, x2:W-padR, y1:base, y2:base, stroke:"var(--ink)"}));
   const gl = svgEl("text", {x:padL-8, y:base+gradeH-2, "text-anchor":"end"}); gl.textContent = "below grade"; svg.appendChild(gl);
